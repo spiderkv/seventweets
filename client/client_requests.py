@@ -1,4 +1,4 @@
-import requests, json
+import requests
 
 
 def print_response(response):
@@ -7,8 +7,8 @@ def print_response(response):
     print('TEXT ', response.text)
     print()
 
-print_response(requests.post('http://127.0.0.1:5000/tweets', {'tweet': 'Test 1', 'name': 'Bla'}))
-print_response(requests.post('http://127.0.0.1:5000/tweets', {'tweet': 'Test 2', 'name': 'Truc'}))
+print_response(requests.post('http://127.0.0.1:5000/tweets', {'tweet': 'Test 1'}))
+print_response(requests.post('http://127.0.0.1:5000/tweets', {'tweet': 'Test 2'}))
 r = requests.get('http://127.0.0.1:5000/tweets')
 print_response(r)
 
