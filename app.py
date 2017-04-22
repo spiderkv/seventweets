@@ -35,4 +35,4 @@ def delete_tweet(tweet_id):
     return jsonify(tweet), 200, HEADERS
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0")
