@@ -1,14 +1,24 @@
 from fabric.api import local, settings, run, env
 
-# Lista servera
-env.hosts = ["pass.sedamcvrkuta.com"] # SSH korisnik
+# server list
+env.hosts = ["pass.sedamcvrkuta.com"]
+
+# SSH user
 env.user = "root"
 
-# Varijable servisa
+# service vars
 name = "seventweets"
 port = 8000
 repository = "spiderkv/seventweets"
 network = "seventweets"
+
+# db vars
+pg_host = 'seventweets-postgres'
+pg_port = 5432
+pg_volume = 'seventwets-postgres-data'
+pg_user = 'workshop'
+pg_pass = 'p4ss'
+pg_version = '9.6.2'
 
 
 def build(tag=""):
@@ -28,11 +38,14 @@ def create_network():
 def start(tag=""):
     local("""
         docker run -d \
-        --name {} \
-        --net {} \
-        -p {}:{} \
-        {}{}
-    """.format(name, network, port, port, repository, tag))
+            --name {} \
+            --net {} \
+            -p {}:{} \
+            -e ST_DB_USER={} \
+            -e ST_DB_PASS={} \
+            -e ST_DB_HOST={} \
+            {}{}
+        """.format(name, network, port, port, pg_user, pg_pass, pg_host, repository, tag))
 
 
 def stop():
@@ -43,6 +56,44 @@ def stop():
 def restart():
     stop()
     start()
+
+
+def db_start():
+    with settings(warn_only=True):
+        local("docker volume create {}".format(pg_volume))
+        local("""
+            docker run -d \
+                --name {} \
+                --net {} \
+                --restart unless-stopped \
+                -e POSTGRES_USER={} \
+                -e POSTGRES_PASSWORD={} \
+                -v {}:/var/lib/postgresql/data \
+                -p localhost:5432:5432 \
+                postgres:{}
+            """.format(pg_host, network, pg_user, pg_pass, pg_volume, pg_version))
+
+
+def db_stop():
+    local("docker stop seventweets-postgres")
+    local("docker rm seventweets-postgres")
+
+
+def deploy_db():
+    with settings(warn_only=True):
+        run("docker volume create {}".format(pg_volume))
+        run("docker network create {}".format(network))
+    run("""
+        docker run -d \
+            --name {} \
+            --net {} \
+            --restart unless-stopped \
+            -p {}:{} \
+            -e POSTGRES_USER={} \
+            -e POSTGRES_PASSWORD={} \
+            -v {}:/var/lib/postgresql/data \
+            postgres:{}
+        """.format(pg_host, network, pg_port, pg_port, pg_user, pg_pass, pg_volume, pg_version))
 
 
 def deploy(tag=""):
@@ -57,5 +108,8 @@ def deploy(tag=""):
             --name {} \
             --net {} \
             -p {}:{} \
+            -e ST_DB_USER={} \
+            -e ST_DB_PASS={} \
+            -e ST_DB_HOST={} \
             {}{}
-        """.format(name, network, port, port, repository, tag))
+        """.format(name, network, port, port, pg_user, pg_pass, pg_host, repository, tag))

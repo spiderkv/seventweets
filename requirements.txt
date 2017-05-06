@@ -2,3 +2,4 @@ requests
 Flask
 pytest
 gunicorn==19.7.1
+pg8000==1.10.6
